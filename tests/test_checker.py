@@ -58,6 +58,47 @@ def test_follows_redirects(session: requests.Session) -> None:
 
 
 @responses.activate
+@pytest.mark.parametrize("status", [301, 302, 303, 307, 308])
+@pytest.mark.parametrize("fallback", [False, True])
+def test_redirect_without_location_is_broken(
+    session: requests.Session, status: int, fallback: bool
+) -> None:
+    if fallback:
+        responses.head(URL, status=405)
+        responses.get(URL, status=status)
+    else:
+        responses.head(URL, status=status)
+
+    result = check_link(URL, session)
+
+    assert result.status == status
+    assert result.is_broken
+    assert result.error == "MissingRedirectLocation"
+
+
+@responses.activate
+def test_redirect_chain_ending_without_location_is_broken(session: requests.Session) -> None:
+    responses.head(URL, status=302, headers={"Location": "/new"})
+    responses.head("https://example.com/new", status=301)
+
+    result = check_link(URL, session)
+
+    assert result.url == URL
+    assert result.status == 301
+    assert result.is_broken
+
+
+@responses.activate
+def test_not_modified_is_not_mistaken_for_a_redirect(session: requests.Session) -> None:
+    responses.head(URL, status=304)
+
+    result = check_link(URL, session)
+
+    assert result.status == 304
+    assert not result.is_broken
+
+
+@responses.activate
 def test_connection_error_is_broken(session: requests.Session) -> None:
     responses.head(URL, body=requests.ConnectionError("connection refused"))
 

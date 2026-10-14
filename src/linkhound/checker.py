@@ -36,6 +36,13 @@ def check_link(url: str, session: requests.Session, timeout: float = 10.0) -> Li
     except requests.RequestException as exc:
         return LinkResult(url, None, _elapsed_ms(start), error=type(exc).__name__)
 
+    if response.status_code in requests.models.REDIRECT_STATI and not response.headers.get(
+        "Location"
+    ):
+        return LinkResult(
+            url, response.status_code, _elapsed_ms(start), error="MissingRedirectLocation"
+        )
+
     return LinkResult(url, response.status_code, _elapsed_ms(start))
 
 

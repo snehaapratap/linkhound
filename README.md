@@ -21,6 +21,7 @@ Checked 7 links: 2 broken.
 - [x] Finds all links on a page, resolves relative URLs, removes duplicates
 - [x] Fast checks with `HEAD`, falling back to `GET` for servers that don't support it
 - [x] Follows redirects, reports response time per link
+- [x] Flags redirects without a usable destination (`MissingRedirectLocation`)
 - [x] CI-friendly exit codes
 - [ ] Crawl a whole site (same domain, configurable depth)
 - [ ] Respect `robots.txt` and rate limits
